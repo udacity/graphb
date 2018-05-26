@@ -11,9 +11,9 @@ import (
 // Though all fields (Go struct field, not GraphQL field) of this struct is public,
 // the author recommends you to use functions in public.go.
 type Query struct {
-	OperationType operationType // The operation type is either query, mutation, or subscription.
-	OperationName string        // The operation name is a meaningful and explicit name for your operation.
-	Fields        []*Field
+	Type   operationType // The operation type is either query, mutation, or subscription.
+	Name   string        // The operation name is a meaningful and explicit name for your operation.
+	Fields []*Field
 }
 
 // implements fieldContainer
@@ -54,11 +54,11 @@ func (q *Query) StringChan() (<-chan string, error) {
 func (q *Query) stringChan() <-chan string {
 	tokenChan := make(chan string)
 	go func() {
-		tokenChan <- strings.ToLower(string(q.OperationType))
+		tokenChan <- strings.ToLower(string(q.Type))
 		// emit operation name
-		if q.OperationName != "" {
+		if q.Name != "" {
 			tokenChan <- " " // todo: make it a token const, not a raw string
-			tokenChan <- q.OperationName
+			tokenChan <- q.Name
 		}
 		// emit fields
 		tokenChan <- "{"
@@ -75,6 +75,34 @@ func (q *Query) stringChan() <-chan string {
 	return tokenChan
 }
 
+func (q *Query) check() error {
+	// check query
+	if !isValidOperationType(q.Type) {
+		return errors.WithStack(InvalidOperationTypeErr{q.Type})
+	}
+	if err := q.checkName(); err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
+}
+
+func (q *Query) checkName() error {
+	if q.Name != "" && !validName.MatchString(q.Name) {
+		return errors.WithStack(InvalidNameErr{operationName, q.Name})
+	}
+	return nil
+}
+
+////////////////
+// Public API //
+////////////////
+
+// MakeQuery constructs a Query of the given type and returns a pointer of it.
+func MakeQuery(Type operationType) *Query {
+	return &Query{Type: Type}
+}
+
+// JsonBody returns a json string with "query" field.
 func (q *Query) JsonBody() (string, error) {
 	strCh, err := q.StringChan()
 	if err != nil {
@@ -84,27 +112,21 @@ func (q *Query) JsonBody() (string, error) {
 	return fmt.Sprintf(`{"query":"%s"}`, strings.Replace(s, `"`, `\"`, -1)), nil
 }
 
-func (q *Query) check() error {
-	// check query
-	if !isValidOperationType(q.OperationType) {
-		return errors.WithStack(InvalidOperationTypeErr{q.OperationType})
-	}
-	if q.OperationName != "" && !validName.MatchString(q.OperationName) {
-		return errors.WithStack(InvalidNameErr{q.OperationName})
-	}
-	return nil
-}
-
-func (q *Query) SetOperationName(name string) *Query{
-	q.OperationName = name
+// SetName sets the Name field of this Query.
+func (q *Query) SetName(name string) *Query {
+	q.Name = name
 	return q
 }
 
+// SetFields sets the Fields field of this Query.
+// If q.Fields already contains data, they will be replaced.
 func (q *Query) SetFields(fields ...*Field) *Query {
 	q.Fields = fields
 	return q
 }
 
-func MakeQuery(t operationType) *Query {
-	return &Query{OperationType: t}
+// SetFields adds to the Fields field of this Query.
+func (q *Query) AddFields(fields ...*Field) *Query {
+	q.Fields = append(q.Fields, fields...)
+	return q
 }

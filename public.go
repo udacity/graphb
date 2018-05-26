@@ -73,7 +73,7 @@ func (qo QueryOption) runQueryOption(query *Query) error {
 // Type and Fields are required.
 // Other options such as operation name and alias are optional.
 func NewQuery(Type operationType, options ...QueryOptionInterface) (*Query, error) {
-	q := &Query{OperationType: Type}
+	q := &Query{Type: Type}
 
 	for _, op := range options {
 		if err := op.runQueryOption(q); err != nil {
@@ -86,10 +86,10 @@ func NewQuery(Type operationType, options ...QueryOptionInterface) (*Query, erro
 // OfName returns a QueryOption which validates and sets the operation name of a query.
 func OfName(name string) QueryOption {
 	return func(query *Query) error {
-		if name != "" && !validName.MatchString(name) {
-			return errors.Errorf("'%s' is not a valid name.", name)
+		query.Name = name
+		if err := query.checkName(); err != nil {
+			return errors.WithStack(err)
 		}
-		query.OperationName = name
 		return nil
 	}
 }
@@ -132,7 +132,7 @@ func OfField(name string, options ...FieldOptionInterface) FieldContainerOption 
 //	query { courses { id, key } }
 // can be written as:
 // 	Query{
-//		OperationType: "query",
+//		Type: "query",
 //		Fields: []*Field{
 //			{
 //				Name:      "courses",

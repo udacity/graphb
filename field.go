@@ -93,14 +93,14 @@ func (f *Field) check() error {
 func (f *Field) checkOther() error {
 	// Check validity of names
 	if !validName.MatchString(f.Name) {
-		return errors.WithStack(InvalidNameErr{f.Name})
+		return errors.WithStack(InvalidNameErr{fieldName, f.Name})
 	}
-	if f.Name != "" && !validName.MatchString(f.Alias) {
-		return errors.WithStack(InvalidNameErr{f.Alias})
+	if f.Alias != "" && !validName.MatchString(f.Alias) {
+		return errors.WithStack(InvalidNameErr{aliasName, f.Alias})
 	}
 	for _, arg := range f.Arguments {
-		if !validName.MatchString(f.Name) {
-			return errors.WithStack(InvalidNameErr{arg[0]})
+		if !validName.MatchString(arg.Name) {
+			return errors.WithStack(InvalidNameErr{argumentName, arg.Name})
 		}
 	}
 
@@ -121,8 +121,27 @@ func (f *Field) checkCycle() error {
 	return nil
 }
 
-func (f *Field) AddArgumentString(name, value string) *Field {
-	f.Arguments = append(f.Arguments, ArgumentString(name, value))
+////////////////
+// Public API //
+////////////////
+
+// MakeField constructs a Field of given name and return the pointer to it.
+func MakeField(name string) *Field {
+	return &Field{Name: name}
+}
+
+func (f *Field) SetArguments(arguments ...Argument) *Field {
+	f.Arguments = arguments
+	return f
+}
+
+func (f *Field) SetFields(fs ...*Field) *Field {
+	f.Fields = fs
+	return f
+}
+
+func (f *Field) SetAlias(alias string) *Field {
+	f.Alias = alias
 	return f
 }
 
@@ -160,11 +179,7 @@ func mapStringSliceToStrRepSlice(strs []string) []string {
 func buildArgumentString(arguments []Argument) string {
 	argumentStrings := make([]string, len(arguments))
 	for i, v := range arguments {
-		argumentStrings[i] = v[0] + ":" + v[1]
+		argumentStrings[i] = v.Name + ":" + v.Value
 	}
 	return strings.Join(argumentStrings, ",")
-}
-
-func MakeField() *Field {
-	return &Field{}
 }
