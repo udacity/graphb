@@ -29,7 +29,7 @@ func TestTheWholePackage(t *testing.T) {
 		assert.Nil(t, err)
 		assert.Equal(t, `query{Alias:courses(uid:123,blocked_nds:["nd013","nd014"]){key,id,},}`, str)
 
-		str, err = q.JsonBody()
+		str, err = q.JSONBody()
 		assert.Nil(t, err)
 		assert.Equal(t, `{"query":"query{Alias:courses(uid:123,blocked_nds:[\"nd013\",\"nd014\"]){key,id,},}"}`, str)
 
@@ -123,7 +123,7 @@ func TestTheWholePackage(t *testing.T) {
 			),
 		)
 		assert.Nil(t, err)
-		s, err := q.JsonBody()
+		s, err := q.JSONBody()
 		assert.Nil(t, err)
 		assert.Equal(t, `{"query":"query another_test{users{id,username,threads(title:\"A Good Title\"){title,created_at,},},}"}`, s)
 	})
@@ -136,7 +136,7 @@ func TestTheWholePackage(t *testing.T) {
 		assert.Equal(t, "", s)
 		assert.False(t, ok)
 
-		s, err = q.JsonBody()
+		s, err = q.JSONBody()
 		assert.Equal(t, "'muTatio' is an invalid operation type in GraphQL. A valid type is one of 'query', 'mutation', 'subscription'", err.Error())
 		assert.Equal(t, "", s)
 	})
@@ -176,7 +176,7 @@ func TestMethodChaining(t *testing.T) {
 				SetAlias("some_alias"),
 		).
 		AddFields(MakeField("x"))
-	s, err := q.JsonBody()
+	s, err := q.JSONBody()
 	assert.Nil(t, err)
 	assert.Equal(t, `{"query":"query{some_alias:x(string:\"123\"){x(string:\"123\",string_slice:[\"a\"]),x,},x,}"}`, s)
 }

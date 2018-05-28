@@ -1,4 +1,5 @@
 // graphb is a Graph QL client query builder.
+// public.go contains public functions (not struct methods) to construct Query(s) and Field(s).
 
 package graphb
 
@@ -20,6 +21,21 @@ func StringFromChan(c <-chan string) string {
 ///////////////////
 // Field Factory //
 ///////////////////
+
+// NewField uses functional options to construct a new Field and returns the pointer to it.
+// On error, the pointer is nil.
+// To know more about this design pattern, see https://dave.cheney.net/2014/10/17/functional-options-for-friendly-apis
+func NewField(name string, options ...FieldOptionInterface) (*Field, error) {
+	f := Field{Name: name}
+	for _, op := range options {
+		if err := op.runFieldOption(&f); err != nil {
+			return nil, errors.WithStack(err)
+		}
+	}
+	return &f, nil
+}
+
+// FieldOptionInterface implements functional options for NewField().
 type FieldOptionInterface interface {
 	runFieldOption(f *Field) error
 }
@@ -31,16 +47,8 @@ func (fco FieldOption) runFieldOption(f *Field) error {
 	return fco(f)
 }
 
-func NewField(name string, options ...FieldOptionInterface) (*Field, error) {
-	f := Field{Name: name}
-	for _, op := range options {
-		if err := op.runFieldOption(&f); err != nil {
-			return nil, errors.WithStack(err)
-		}
-	}
-	return &f, nil
-}
-
+// OfFields returns a FieldOption which sets a list of sub fields of given names of the targeting field.
+// All the sub fields only have one level which is their names. That is, no sub fields have sub fields.
 func OfFields(name ...string) FieldOption {
 	return func(f *Field) error {
 		f.setFields(Fields(name...))
@@ -48,6 +56,14 @@ func OfFields(name ...string) FieldOption {
 	}
 }
 
+func OfAlias(alias string) FieldOption {
+	return func(f *Field) error {
+		f.Alias = alias
+		return errors.WithStack(f.checkAlias())
+	}
+}
+
+// OfArguments returns a FieldOption which sets the arguments of the targeting field.
 func OfArguments(arguments ...Argument) FieldOption {
 	return func(f *Field) error {
 		f.Arguments = arguments
@@ -58,19 +74,10 @@ func OfArguments(arguments ...Argument) FieldOption {
 ///////////////////
 // Query Factory //
 ///////////////////
-type QueryOptionInterface interface {
-	runQueryOption(q *Query) error
-}
 
-// QueryOption implements QueryOptionInterface
-type QueryOption func(query *Query) error
-
-func (qo QueryOption) runQueryOption(query *Query) error {
-	return qo(query)
-}
-
-// NewQuery creates a new Query.
-// Type and Fields are required.
+// NewQuery uses functional options to construct a new Query and returns the pointer to it.
+// On error, the pointer is nil.
+// Type is required.
 // Other options such as operation name and alias are optional.
 func NewQuery(Type operationType, options ...QueryOptionInterface) (*Query, error) {
 	q := &Query{Type: Type}
@@ -81,6 +88,18 @@ func NewQuery(Type operationType, options ...QueryOptionInterface) (*Query, erro
 		}
 	}
 	return q, nil
+}
+
+// QueryOptionInterface implements functional options for NewQuery().
+type QueryOptionInterface interface {
+	runQueryOption(q *Query) error
+}
+
+// QueryOption implements QueryOptionInterface
+type QueryOption func(query *Query) error
+
+func (qo QueryOption) runQueryOption(query *Query) error {
+	return qo(query)
 }
 
 // OfName returns a QueryOption which validates and sets the operation name of a query.
@@ -102,9 +121,10 @@ type fieldContainer interface {
 	setFields([]*Field)
 }
 
-// FieldContainerOption implements FieldOptionInterface and QueryOptionInterface.
+// FieldContainerOption implements FieldOptionInterface and QueryOptionInterface,
+// which means, it can be used as the functional option for both NewQuery() and NewField().
 // FieldContainerOption is a function which takes in a fieldContainer and config it.
-// Both Query and Field are fieldContainer,
+// Both Query and Field are fieldContainer.
 type FieldContainerOption func(fc fieldContainer) error
 
 func (fco FieldContainerOption) runQueryOption(q *Query) error {
@@ -115,6 +135,8 @@ func (fco FieldContainerOption) runFieldOption(f *Field) error {
 	return fco(f)
 }
 
+// OfField returns a FieldContainerOption and has the same parameter signature of
+// NewField(name string, options ...FieldOptionInterface) (*Field, error)
 func OfField(name string, options ...FieldOptionInterface) FieldContainerOption {
 	return func(fc fieldContainer) error {
 		f, err := NewField(name, options...)

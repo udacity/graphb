@@ -15,7 +15,7 @@ type Field struct {
 	Fields    []*Field
 }
 
-// implements fieldContainer
+// Implement fieldContainer
 func (f *Field) getFields() []*Field {
 	return f.Fields
 }
@@ -95,8 +95,8 @@ func (f *Field) checkOther() error {
 	if !validName.MatchString(f.Name) {
 		return errors.WithStack(InvalidNameErr{fieldName, f.Name})
 	}
-	if f.Alias != "" && !validName.MatchString(f.Alias) {
-		return errors.WithStack(InvalidNameErr{aliasName, f.Alias})
+	if err := f.checkAlias(); err != nil {
+		return errors.WithStack(err)
 	}
 	for _, arg := range f.Arguments {
 		if !validName.MatchString(arg.Name) {
@@ -113,6 +113,13 @@ func (f *Field) checkOther() error {
 	return nil
 }
 
+func (f *Field) checkAlias() error {
+	if f.Alias != "" && !validName.MatchString(f.Alias) {
+		return errors.WithStack(InvalidNameErr{aliasName, f.Alias})
+	}
+	return nil
+}
+
 // todo: reports the cycle path
 func (f *Field) checkCycle() error {
 	if err := reach(f, f); err != nil {
@@ -125,21 +132,24 @@ func (f *Field) checkCycle() error {
 // Public API //
 ////////////////
 
-// MakeField constructs a Field of given name and return the pointer to it.
+// MakeField constructs a Field of given name and return the pointer to this Field.
 func MakeField(name string) *Field {
 	return &Field{Name: name}
 }
 
+// SetArguments sets the arguments of a Field and return the pointer to this Field.
 func (f *Field) SetArguments(arguments ...Argument) *Field {
 	f.Arguments = arguments
 	return f
 }
 
+// SetFields sets the sub fields of a Field and return the pointer to this Field.
 func (f *Field) SetFields(fs ...*Field) *Field {
 	f.Fields = fs
 	return f
 }
 
+// SetAlias sets the alias of a Field and return the pointer to this Field.
 func (f *Field) SetAlias(alias string) *Field {
 	f.Alias = alias
 	return f

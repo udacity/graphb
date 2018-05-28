@@ -1,5 +1,5 @@
 # graphb: A GraphQL query builder
-Focus on the query, not string interpolation.
+__Focus on the query, not string manipulation.__
 
 As Go developers, when there is a GraphQL server, we often build our query string like this:
 ```go
@@ -22,7 +22,7 @@ func buildQuery(value string) string {
 ```
 This approach is verbose, inflexible and error prone.
 
-It is verbose and flexible because every time you want to query a different structure, you need to rewrite another template and another string interpolation function. Not to mention when you have argument types such lists or enums or when you want to use fragments, directives and other syntax of GraphQL.
+It is verbose and inflexible because every time you want to query a different structure, you need to rewrite another template and another string interpolation function. Not to mention when you have argument types such lists or enums or when you want to use fragments, directives and other syntax of GraphQL.
 
 It is error prone because there is no way to check the correctness of your syntax until very late, when the query string is actually send to the server.
 
@@ -33,6 +33,8 @@ Because of these problems, when it comes to GraphQL client in Go, a developer sp
 This library solves all these problems for you so that you focus on your business logic.
 
 ## Example
+All code are well documented. See [example](example) dir for more examples.
+
 #### Query a mentor from Mentors API
 ```go
 q, err := graphb.NewQuery(
@@ -96,14 +98,30 @@ You get
 ```json
 {"query":"query another_test{users{id,username,threads{title,created_at,},},}"}
 ```
+#### Method Chaining
+You can also see a method chaining API example in [example/example_test.go](example/example_test.go)
 
-As you can see, you can use both `NewQuery` function to construct a query or use the struct literal.
+### Words from the author
+As you can see, one can use `NewQuery`, `MakeQuery` or the struct literal to construct a query.
 
-I recommend `NewQuery` because it provides more initialization time checking. Using a struct literal does not prevent you from constructing an invalid query. Of course, all errors will be caught once your construct the string. (In the current implementation, struct literal is unsafe)
+I recommend `NewQuery` because it provides more initialization time checking.
 
-I hesitate to make all fields private and only allow constructing a query through `NewQuery`. I want people to use it and give feedback.
+One may also find `MakeQuery`'s method chaining API more friendly to work with because it provides IDE code suggestions, which means you can literally build a GraphQL query through code suggestions.
 
-__Last but not least, the library catches cycles.__ That is, if you have a `Field` whose sub Fields can reach the `Field` itself, the library reports an error.
+Using a struct literal does not prevent you from constructing an invalid query. Of course, all errors will be caught once your construct the string.
+
+__The library catches cycles.__ That is, if you have a `Field` whose sub Fields can reach the `Field` itself, the library reports an error.
+
+I hesitate to make all fields private and only allow constructing a query through `NewQuery` and `MakeQuery`. I also don't know if `MakeQuery` is better than `NewQuery` or the contrary. __Please use it and give feedback__.
+
+## Error Handling
+All `graphb` errors are wrapped by [pkg/errors](https://github.com/pkg/errors).
+
+## Test
+`graphb` uses [testify/assert](https://github.com/stretchr/testify/#assert-package).
+```bash
+go test
+```
 
 ## Todos
 The library does not currently support:
