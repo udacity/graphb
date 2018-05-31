@@ -13,6 +13,10 @@ type Argument struct {
 	Value string
 }
 
+func ArgumentBool(name string, value bool) Argument {
+	return Argument{name, fmt.Sprintf("%v", value)}
+}
+
 func ArgumentInt(name string, value int) Argument {
 	return Argument{name, fmt.Sprintf("%d", value)}
 }
