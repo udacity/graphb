@@ -26,7 +26,7 @@ func TestMethodChaining(t *testing.T) {
 				SetAlias("some_alias"),
 		).
 		AddFields(graphb.MakeField("b"))
-	s, err := q.JSONBody()
+	s, err := q.JSON()
 	assert.Nil(t, err)
 	assert.Equal(t, `{"query":"query{some_alias:a(string:\"123\"){x(string:\"123\",string_slice:[\"a\"]),y,},b,}"}`, s)
 }

@@ -1,6 +1,8 @@
 package graphb
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type nameType string
 
@@ -45,4 +47,13 @@ type CyclicFieldErr struct {
 
 func (e CyclicFieldErr) Error() string {
 	return fmt.Sprintf("Field %+v contains cyclic loop", e.Field)
+}
+
+// ArgumentTypeNotSupportErr is returned when user tries to pass an unsupported type to ArgumentAny.
+type ArgumentTypeNotSupportErr struct {
+	Value interface{}
+}
+
+func (e ArgumentTypeNotSupportErr) Error() string {
+	return fmt.Sprintf("Argument %+v of Type %T is not supported", e.Value, e.Value)
 }

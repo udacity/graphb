@@ -143,6 +143,11 @@ func (f *Field) SetArguments(arguments ...Argument) *Field {
 	return f
 }
 
+func (f *Field) AddArguments(argument ...Argument) *Field {
+	f.Arguments = append(f.Arguments, argument...)
+	return f
+}
+
 // SetFields sets the sub fields of a Field and return the pointer to this Field.
 func (f *Field) SetFields(fs ...*Field) *Field {
 	f.Fields = fs

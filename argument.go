@@ -13,6 +13,21 @@ type Argument struct {
 	Value string
 }
 
+func ArgumentAny(name string, value interface{}) (Argument, error) {
+	switch v := value.(type) {
+	case bool:
+		return ArgumentBool(name, v), nil
+	case int:
+		return ArgumentInt(name, v), nil
+	case string:
+		return ArgumentString(name, v), nil
+	case []string:
+		return ArgumentStringSlice(name, v...), nil
+	default:
+		return Argument{}, ArgumentTypeNotSupportErr{Value: value}
+	}
+}
+
 func ArgumentBool(name string, value bool) Argument {
 	return Argument{name, fmt.Sprintf("%v", value)}
 }

@@ -102,8 +102,8 @@ func MakeQuery(Type operationType) *Query {
 	return &Query{Type: Type}
 }
 
-// JSONBody returns a json string with "query" field.
-func (q *Query) JSONBody() (string, error) {
+// JSON returns a json string with "query" field.
+func (q *Query) JSON() (string, error) {
 	strCh, err := q.StringChan()
 	if err != nil {
 		return "", errors.WithStack(err)
@@ -116,6 +116,16 @@ func (q *Query) JSONBody() (string, error) {
 func (q *Query) SetName(name string) *Query {
 	q.Name = name
 	return q
+}
+
+// GetField return the field identified by the name. Nil if not exist.
+func (q *Query) GetField(name string) *Field {
+	for _, f := range q.Fields {
+		if f.Name == name {
+			return f
+		}
+	}
+	return nil
 }
 
 // SetFields sets the Fields field of this Query.
