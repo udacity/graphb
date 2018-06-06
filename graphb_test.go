@@ -92,24 +92,24 @@ func TestTheWholePackage(t *testing.T) {
 	})
 
 	t.Run("name validation", func(t *testing.T) {
-		_, err := NewQuery(TypeQuery, OfName("我"))
-		assert.IsType(t, InvalidNameErr{}, errors.Cause(err))
+		q := NewQuery(TypeQuery, OfName("我"))
+		assert.IsType(t, InvalidNameErr{}, errors.Cause(q.E))
 
-		_, err = NewQuery(TypeQuery, OfName("_我"))
-		assert.IsType(t, InvalidNameErr{}, errors.Cause(err))
+		q = NewQuery(TypeQuery, OfName("_我"))
+		assert.IsType(t, InvalidNameErr{}, errors.Cause(q.E))
 
-		_, err = NewQuery(TypeMutation, OfName("x-x"))
-		assert.IsType(t, InvalidNameErr{}, errors.Cause(err))
+		q = NewQuery(TypeMutation, OfName("x-x"))
+		assert.IsType(t, InvalidNameErr{}, errors.Cause(q.E))
 
-		_, err = NewQuery(TypeMutation, OfName("x x"))
-		assert.IsType(t, InvalidNameErr{}, errors.Cause(err))
+		q = NewQuery(TypeMutation, OfName("x x"))
+		assert.IsType(t, InvalidNameErr{}, errors.Cause(q.E))
 
-		_, err = NewQuery(TypeSubscription, OfName("_1x1_1x1_"))
-		assert.Nil(t, err)
+		q = NewQuery(TypeSubscription, OfName("_1x1_1x1_"))
+		assert.Nil(t, q.E)
 	})
 
 	t.Run("Nested fields", func(t *testing.T) {
-		q, err := NewQuery(
+		q := NewQuery(
 			TypeQuery,
 			OfName("another_test"),
 			OfField(
@@ -122,7 +122,7 @@ func TestTheWholePackage(t *testing.T) {
 				),
 			),
 		)
-		assert.Nil(t, err)
+		assert.Nil(t, q.E)
 		s, err := q.JSON()
 		assert.Nil(t, err)
 		assert.Equal(t, `{"query":"query another_test{users{id,username,threads(title:\"A Good Title\"){title,created_at,},},}"}`, s)

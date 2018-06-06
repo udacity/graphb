@@ -14,6 +14,7 @@ type Query struct {
 	Type   operationType // The operation type is either query, mutation, or subscription.
 	Name   string        // The operation name is a meaningful and explicit name for your operation.
 	Fields []*Field
+	E      error
 }
 
 // implements fieldContainer
