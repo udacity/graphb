@@ -6,6 +6,28 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestArgumentAny(t *testing.T) {
+	arg, err := ArgumentAny("arg", 1)
+	assert.Nil(t, err)
+	assert.Equal(t, Argument{"arg", "1"}, arg)
+
+	arg, err = ArgumentAny("arg", true)
+	assert.Nil(t, err)
+	assert.Equal(t, Argument{"arg", "true"}, arg)
+
+	arg, err = ArgumentAny("arg", "str")
+	assert.Nil(t, err)
+	assert.Equal(t, Argument{"arg", `"str"`}, arg)
+
+	arg, err = ArgumentAny("arg", []string{"str", "slice"})
+	assert.Nil(t, err)
+	assert.Equal(t, Argument{"arg", `["str","slice"]`}, arg)
+
+	arg, err = ArgumentAny("arg", []bool{true, false})
+	assert.Equalf(t, "Argument [true false] of Type []bool is not supported", err.Error(), "This type is not supported yet")
+	assert.Equal(t, Argument{}, arg)
+}
+
 func TestArgumentBool(t *testing.T) {
 	a := ArgumentBool("blocked", true)
 	assert.Equal(t, Argument{"blocked", "true"}, a)

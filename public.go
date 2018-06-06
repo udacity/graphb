@@ -25,14 +25,15 @@ func StringFromChan(c <-chan string) string {
 // NewField uses functional options to construct a new Field and returns the pointer to it.
 // On error, the pointer is nil.
 // To know more about this design pattern, see https://dave.cheney.net/2014/10/17/functional-options-for-friendly-apis
-func NewField(name string, options ...FieldOptionInterface) (*Field, error) {
-	f := Field{Name: name}
+func NewField(name string, options ...FieldOptionInterface) (*Field) {
+	f := &Field{Name: name}
 	for _, op := range options {
-		if err := op.runFieldOption(&f); err != nil {
-			return nil, errors.WithStack(err)
+		if err := op.runFieldOption(f); err != nil {
+			f.E = errors.WithStack(err)
+			return f
 		}
 	}
-	return &f, nil
+	return f
 }
 
 // FieldOptionInterface implements functional options for NewField().
@@ -79,15 +80,17 @@ func OfArguments(arguments ...Argument) FieldOption {
 // On error, the pointer is nil.
 // Type is required.
 // Other options such as operation name and alias are optional.
-func NewQuery(Type operationType, options ...QueryOptionInterface) (*Query, error) {
+func NewQuery(Type operationType, options ...QueryOptionInterface) (*Query) {
+	// todo: change to new style error handling
 	q := &Query{Type: Type}
 
 	for _, op := range options {
 		if err := op.runQueryOption(q); err != nil {
-			return nil, errors.WithStack(err)
+			q.E = errors.WithStack(err)
+			return q
 		}
 	}
-	return q, nil
+	return q
 }
 
 // QueryOptionInterface implements functional options for NewQuery().
@@ -139,9 +142,9 @@ func (fco FieldContainerOption) runFieldOption(f *Field) error {
 // NewField(name string, options ...FieldOptionInterface) (*Field, error)
 func OfField(name string, options ...FieldOptionInterface) FieldContainerOption {
 	return func(fc fieldContainer) error {
-		f, err := NewField(name, options...)
-		if err != nil {
-			return errors.WithStack(err)
+		f := NewField(name, options...)
+		if f.E != nil {
+			return errors.WithStack(f.E)
 		}
 		fc.setFields(append(fc.getFields(), f))
 		return nil

@@ -20,3 +20,12 @@ func TestQuery_check(t *testing.T) {
 	assert.IsType(t, InvalidNameErr{}, errors.Cause(err))
 	assert.Equal(t, "'1' is an invalid operation name in GraphQL. A valid name matches /[_A-Za-z][_0-9A-Za-z]*/, see: http://facebook.github.io/graphql/October2016/#sec-Names", err.Error())
 }
+
+func TestQuery_GetField(t *testing.T) {
+	q := MakeQuery(TypeQuery).SetFields(MakeField("f1"))
+	f := q.GetField("f1")
+	assert.Equal(t, "f1", f.Name)
+
+	f = q.GetField("f2")
+	assert.Nil(t, f)
+}

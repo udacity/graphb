@@ -13,6 +13,7 @@ type Field struct {
 	Alias     string
 	Arguments []Argument
 	Fields    []*Field
+	E         error
 }
 
 // Implement fieldContainer
@@ -27,6 +28,7 @@ func (f *Field) setFields(fs []*Field) {
 // StringChan returns read only string token channel or an error.
 // It checks if there is a circle.
 func (f *Field) StringChan() (<-chan string, error) {
+	// todo: new style error handling
 	if err := f.check(); err != nil {
 		// return a closed channel instead of nil for receiving from nil blocks forever, hard to debug and confusing to users.
 		ch := make(chan string)
