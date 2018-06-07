@@ -24,8 +24,12 @@ func TestArgumentAny(t *testing.T) {
 	assert.Equal(t, Argument{"arg", `["str","slice"]`}, arg)
 
 	arg, err = ArgumentAny("arg", []bool{true, false})
-	assert.Equalf(t, "Argument [true false] of Type []bool is not supported", err.Error(), "This type is not supported yet")
-	assert.Equal(t, Argument{}, arg)
+	assert.Nil(t, err)
+	assert.Equal(t, Argument{"arg", `[true,false]`}, arg)
+
+	arg, err = ArgumentAny("arg", []int{1, 2})
+	assert.Nil(t, err)
+	assert.Equal(t, Argument{"arg", `[1,2]`}, arg)
 }
 
 func TestArgumentBool(t *testing.T) {
