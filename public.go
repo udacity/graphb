@@ -25,7 +25,7 @@ func StringFromChan(c <-chan string) string {
 // NewField uses functional options to construct a new Field and returns the pointer to it.
 // On error, the pointer is nil.
 // To know more about this design pattern, see https://dave.cheney.net/2014/10/17/functional-options-for-friendly-apis
-func NewField(name string, options ...FieldOptionInterface) (*Field) {
+func NewField(name string, options ...FieldOptionInterface) *Field {
 	f := &Field{Name: name}
 	for _, op := range options {
 		if err := op.runFieldOption(f); err != nil {
@@ -80,7 +80,7 @@ func OfArguments(arguments ...Argument) FieldOption {
 // On error, the pointer is nil.
 // Type is required.
 // Other options such as operation name and alias are optional.
-func NewQuery(Type operationType, options ...QueryOptionInterface) (*Query) {
+func NewQuery(Type operationType, options ...QueryOptionInterface) *Query {
 	// todo: change to new style error handling
 	q := &Query{Type: Type}
 
