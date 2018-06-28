@@ -27,16 +27,16 @@ func TestTheWholePackage(t *testing.T) {
 		strCh, err := q.StringChan()
 		str := StringFromChan(strCh)
 		assert.Nil(t, err)
-		assert.Equal(t, `query{Alias:courses(uid:123,blocked_nds:["nd013","nd014"]){key,id,},}`, str)
+		assert.Equal(t, `query{Alias:courses(uid:123,blocked_nds:["nd013","nd014"]){key,id}}`, str)
 
 		str, err = q.JSON()
 		assert.Nil(t, err)
-		assert.Equal(t, `{"query":"query{Alias:courses(uid:123,blocked_nds:[\"nd013\",\"nd014\"]){key,id,},}"}`, str)
+		assert.Equal(t, `{"query":"query{Alias:courses(uid:123,blocked_nds:[\"nd013\",\"nd014\"]){key,id}}"}`, str)
 
 		strCh, err = q.Fields[0].StringChan()
 		str = StringFromChan(strCh)
 		assert.Nil(t, err)
-		assert.Equal(t, `Alias:courses(uid:123,blocked_nds:["nd013","nd014"]){key,id,}`, str)
+		assert.Equal(t, `Alias:courses(uid:123,blocked_nds:["nd013","nd014"]){key,id}`, str)
 	})
 
 	t.Run("Invalid names", func(t *testing.T) {
@@ -125,7 +125,7 @@ func TestTheWholePackage(t *testing.T) {
 		assert.Nil(t, q.E)
 		s, err := q.JSON()
 		assert.Nil(t, err)
-		assert.Equal(t, `{"query":"query another_test{users{id,username,threads(title:\"A Good Title\"){title,created_at,},},}"}`, s)
+		assert.Equal(t, `{"query":"query another_test{users{id,username,threads(title:\"A Good Title\"){title,created_at}}}"}`, s)
 	})
 
 	t.Run("Invalid operation type", func(t *testing.T) {
@@ -178,5 +178,5 @@ func TestMethodChaining(t *testing.T) {
 		AddFields(MakeField("x"))
 	s, err := q.JSON()
 	assert.Nil(t, err)
-	assert.Equal(t, `{"query":"query{some_alias:x(string:\"123\"){x(string:\"123\",string_slice:[\"a\"]),x,},x,}"}`, s)
+	assert.Equal(t, `{"query":"query{some_alias:x(string:\"123\"){x(string:\"123\",string_slice:[\"a\"]),x},x}"}`, s)
 }

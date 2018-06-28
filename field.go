@@ -1,9 +1,6 @@
 package graphb
 
 import (
-	"fmt"
-	"strings"
-
 	"github.com/pkg/errors"
 )
 
@@ -49,32 +46,38 @@ func (f *Field) stringChan() <-chan string {
 		// emit alias and names
 		if f.Alias != "" {
 			tokenChan <- f.Alias
-			tokenChan <- ":" // todo: change it to const token
+			tokenChan <- tokenColumn
 		}
 		tokenChan <- f.Name
 
 		// emit argument tokens
 		if len(f.Arguments) > 0 {
-			str := buildArgumentString(f.Arguments)
-
-			tokenChan <- "("
-			tokenChan <- str
-			tokenChan <- ")"
+			tokenChan <- tokenLP
+			for i := range f.Arguments {
+				if i != 0 {
+					tokenChan <- tokenComma
+				}
+				for str := range f.Arguments[i].stringChan() {
+					tokenChan <- str
+				}
+			}
+			tokenChan <- tokenRP
 		}
 
 		// emit field tokens
 		if len(f.Fields) > 0 {
-			tokenChan <- "{"
-			for _, field := range f.Fields {
+			tokenChan <- tokenLB
+			for i, field := range f.Fields {
 				if field != nil {
-					strs := field.stringChan()
-					for str := range strs {
+					if i != 0 {
+						tokenChan <- tokenComma
+					}
+					for str := range field.stringChan() {
 						tokenChan <- str
 					}
 				}
-				tokenChan <- ","
 			}
-			tokenChan <- "}"
+			tokenChan <- tokenRB
 		}
 		close(tokenChan)
 	}()
@@ -179,24 +182,4 @@ func reach(f1, f2 *Field) error {
 		}
 	}
 	return nil
-}
-
-func strRepresentation(str string) string {
-	return fmt.Sprintf(`"%s"`, str)
-}
-
-func mapStringSliceToStrRepSlice(strs []string) []string {
-	newStrings := make([]string, len(strs))
-	for i, s := range strs {
-		newStrings[i] = strRepresentation(s)
-	}
-	return newStrings
-}
-
-func buildArgumentString(arguments []Argument) string {
-	argumentStrings := make([]string, len(arguments))
-	for i, v := range arguments {
-		argumentStrings[i] = v.Name + ":" + v.Value
-	}
-	return strings.Join(argumentStrings, ",")
 }

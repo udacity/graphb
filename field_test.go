@@ -11,5 +11,5 @@ func TestField_AddArguments(t *testing.T) {
 	assert.Equal(t, 0, len(f.Arguments))
 
 	f.AddArguments(ArgumentBool("b", true))
-	assert.Equal(t, Argument{"b", "true"}, f.Arguments[0])
+	assert.Equal(t, Argument{"b", argBool(true)}, f.Arguments[0])
 }

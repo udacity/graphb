@@ -2,12 +2,28 @@ package graphb
 
 import (
 	"fmt"
-	"strings"
 )
+
+type argumentValue interface {
+	stringChan() <-chan string
+}
 
 type Argument struct {
 	Name  string
-	Value string
+	Value argumentValue
+}
+
+func (a *Argument) stringChan() <-chan string {
+	tokenChan := make(chan string)
+	go func() {
+		tokenChan <- a.Name
+		tokenChan <- ":"
+		for str := range a.Value.stringChan() {
+			tokenChan <- str
+		}
+		close(tokenChan)
+	}()
+	return tokenChan
 }
 
 func ArgumentAny(name string, value interface{}) (Argument, error) {
@@ -15,100 +31,50 @@ func ArgumentAny(name string, value interface{}) (Argument, error) {
 	case bool:
 		return ArgumentBool(name, v), nil
 	case []bool:
-		return argumentSlice(name, boolSlice(v)), nil
+		return ArgumentBoolSlice(name, v...), nil
 
 	case int:
 		return ArgumentInt(name, v), nil
 	case []int:
-		return argumentSlice(name, intSlice(v)), nil
+		return ArgumentIntSlice(name, v...), nil
 
 	case string:
 		return ArgumentString(name, v), nil
 	case []string:
-		return argumentSlice(name, stringSlice(v)), nil
+		return ArgumentStringSlice(name, v...), nil
 
 	default:
-		return Argument{}, ArgumentTypeNotSupportErr{Value: value}
+		return Argument{}, ArgumentTypeNotSupportedErr{Value: value}
 	}
 }
 
 func ArgumentBool(name string, value bool) Argument {
-	return Argument{name, argBool(value).Rep()}
+	return Argument{name, argBool(value)}
 }
 
 func ArgumentInt(name string, value int) Argument {
-	return Argument{name, argInt(value).Rep()}
+	return Argument{name, argInt(value)}
 }
 
 func ArgumentString(name string, value string) Argument {
-	return Argument{name, argString(value).Rep()}
-}
-
-func ArgumentStringSlice(name string, values ...string) Argument {
-	return argumentSlice(name, stringSlice(values))
-}
-
-func ArgumentIntSlice(name string, values ...int) Argument {
-	return argumentSlice(name, intSlice(values))
+	return Argument{name, argString(value)}
 }
 
 func ArgumentBoolSlice(name string, values ...bool) Argument {
-	return argumentSlice(name, boolSlice(values))
+	return Argument{name, argBoolSlice(values)}
 }
 
-//////////////////////////////
-// Primitive List Interface //
-//////////////////////////////
-
-type valueSlice interface {
-	// Get the string representation of i-th element
-	Len() int
-	String(int) string
+func ArgumentIntSlice(name string, values ...int) Argument {
+	return Argument{name, argIntSlice(values)}
 }
 
-func argumentSlice(name string, slice valueSlice) Argument {
-	representations := make([]string, slice.Len())
-	for i := 0; i < slice.Len(); i++ {
-		representations[i] = slice.String(i)
-	}
-	return Argument{Name: name, Value: fmt.Sprintf("[%s]", strings.Join(representations, ","))}
+func ArgumentStringSlice(name string, values ...string) Argument {
+	return Argument{name, argStringSlice(values)}
 }
 
-//////////////////////////////////
-// Primitive List Wrapper Types //
-//////////////////////////////////
-
-// boolSlice implements valueSlice
-type boolSlice []bool
-
-func (bs boolSlice) Len() int {
-	return len(bs)
-}
-
-func (bs boolSlice) String(i int) string {
-	return argBool(bs[i]).Rep()
-}
-
-// stringSlice implements valueSlice
-type stringSlice []string
-
-func (s stringSlice) Len() int {
-	return len(s)
-}
-
-func (s stringSlice) String(i int) string {
-	return argString(s[i]).Rep()
-}
-
-// intSlice implements valueSlice
-type intSlice []int
-
-func (s intSlice) Len() int {
-	return len(s)
-}
-
-func (s intSlice) String(i int) string {
-	return fmt.Sprintf("%v", argInt(s[i]).Rep())
+// ArgumentCustomType returns a custom GraphQL type's argument representation, which could be a recursive structure.
+func ArgumentCustomType(name string, values ...Argument) Argument {
+	return Argument{name, argumentSlice(values)}
 }
 
 /////////////////////////////
@@ -118,20 +84,116 @@ func (s intSlice) String(i int) string {
 // argBool represents a boolean value.
 type argBool bool
 
-func (v argBool) Rep() string {
-	return fmt.Sprintf("%v", v)
+func (v argBool) stringChan() <-chan string {
+	tokenChan := make(chan string)
+	go func() {
+		tokenChan <- fmt.Sprintf("%t", v)
+		close(tokenChan)
+	}()
+	return tokenChan
 }
 
 // argInt represents an integer value.
 type argInt int
 
-func (v argInt) Rep() string {
-	return fmt.Sprintf("%d", v)
+func (v argInt) stringChan() <-chan string {
+	tokenChan := make(chan string)
+	go func() {
+		tokenChan <- fmt.Sprintf("%d", v)
+		close(tokenChan)
+	}()
+	return tokenChan
 }
 
 // argString represents a string value.
 type argString string
 
-func (v argString) Rep() string {
-	return fmt.Sprintf(`"%s"`, v)
+func (v argString) stringChan() <-chan string {
+	tokenChan := make(chan string)
+	go func() {
+		tokenChan <- fmt.Sprintf(`"%s"`, v)
+		close(tokenChan)
+	}()
+	return tokenChan
+}
+
+//////////////////////////////////
+// Primitive List Wrapper Types //
+//////////////////////////////////
+
+// argBoolSlice implements valueSlice
+type argBoolSlice []bool
+
+func (s argBoolSlice) stringChan() <-chan string {
+	tokenChan := make(chan string)
+	go func() {
+		tokenChan <- "["
+		for i, v := range s {
+			if i != 0 {
+				tokenChan <- ","
+			}
+			tokenChan <- fmt.Sprintf("%t", v)
+		}
+		tokenChan <- "]"
+		close(tokenChan)
+	}()
+	return tokenChan
+}
+
+// argIntSlice implements valueSlice
+type argIntSlice []int
+
+func (s argIntSlice) stringChan() <-chan string {
+	tokenChan := make(chan string)
+	go func() {
+		tokenChan <- "["
+		for i, v := range s {
+			if i != 0 {
+				tokenChan <- ","
+			}
+			tokenChan <- fmt.Sprintf("%d", v)
+		}
+		tokenChan <- "]"
+		close(tokenChan)
+	}()
+	return tokenChan
+}
+
+// argStringSlice implements valueSlice
+type argStringSlice []string
+
+func (s argStringSlice) stringChan() <-chan string {
+	tokenChan := make(chan string)
+	go func() {
+		tokenChan <- "["
+		for i, v := range s {
+			if i != 0 {
+				tokenChan <- ","
+			}
+			tokenChan <- fmt.Sprintf(`"%s"`, v)
+		}
+		tokenChan <- "]"
+		close(tokenChan)
+	}()
+	return tokenChan
+}
+
+type argumentSlice []Argument
+
+func (s argumentSlice) stringChan() <-chan string {
+	tokenChan := make(chan string)
+	go func() {
+		tokenChan <- "{"
+		for i, v := range s {
+			if i != 0 {
+				tokenChan <- ","
+			}
+			for str := range v.stringChan() {
+				tokenChan <- str
+			}
+		}
+		tokenChan <- "}"
+		close(tokenChan)
+	}()
+	return tokenChan
 }

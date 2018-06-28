@@ -1,6 +1,7 @@
 package graphb
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/pkg/errors"
@@ -28,4 +29,38 @@ func TestQuery_GetField(t *testing.T) {
 
 	f = q.GetField("f2")
 	assert.Nil(t, f)
+}
+
+func TestQuery_JSON(t *testing.T) {
+	t.Parallel()
+
+	t.Run("Arguments can be nested structures", func(t *testing.T) {
+		t.Parallel()
+
+		q := NewQuery(TypeMutation).
+			SetFields(
+				NewField("createQuestion").
+					SetArguments(
+						ArgumentCustomType(
+							"input",
+							ArgumentString("title", "what"),
+							ArgumentString("content", "what"),
+							ArgumentStringSlice("tagIds"),
+						),
+					).
+					SetFields(
+						NewField("question", OfFields("id")),
+					),
+			)
+
+		c := q.stringChan()
+
+		var strs []string
+		for str := range c {
+			strs = append(strs, str)
+		}
+
+		assert.Equal(t, `mutation{createQuestion(input:{title:"what",content:"what",tagIds:[]}){question{id}}}`, strings.Join(strs, ""))
+	})
+
 }
