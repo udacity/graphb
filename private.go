@@ -12,3 +12,14 @@ func isValidOperationType(Type operationType) bool {
 	low := strings.ToLower(string(Type))
 	return low == "query" || low == "mutation" || low == "subscription"
 }
+
+const (
+	// syntax tokens
+	tokenLB     = "{" // Left Brace
+	tokenRB     = "}" // Right Brace
+	tokenLP     = "(" // Left Parenthesis
+	tokenRP     = ")" // Right Parenthesis
+	tokenColumn = ":"
+	tokenComma  = ","
+	tokenSpace  = " "
+)

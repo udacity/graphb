@@ -39,7 +39,7 @@ func TestMethodChaining(t *testing.T) {
 		AddFields(graphb.MakeField("b"))
 	s, err := q.JSON()
 	assert.Nil(t, err)
-	assert.Equal(t, `{"query":"query{some_alias:a(string:\"123\"){x(string:\"123\",int_slice:[1,2,3]),y,},b,}"}`, s)
+	assert.Equal(t, `{"query":"query{some_alias:a(string:\"123\"){x(string:\"123\",int_slice:[1,2,3]),y},b}"}`, s)
 }
 
 func TestFunctionalOptions(t *testing.T) {
@@ -68,7 +68,7 @@ func TestFunctionalOptions(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(
 		t,
-		`{"query":"query Good_Name_Is_Important{books(author:\"William Shakespeare\",title:[\"Hamlet\",\"Henry IV\"]){author,title,price,},}"}`,
+		`{"query":"query Good_Name_Is_Important{books(author:\"William Shakespeare\",title:[\"Hamlet\",\"Henry IV\"]){author,title,price}}"}`,
 		jsonString,
 	)
 }
@@ -94,7 +94,7 @@ func TestStructLiteral(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(
 		t,
-		`{"query":"mutation It_is_A_Name{f_1_alias:f_1(arg:[3,2,-1]),f_2,}"}`,
+		`{"query":"mutation It_is_A_Name{f_1_alias:f_1(arg:[3,2,-1]),f_2}"}`,
 		jsonString,
 	)
 }

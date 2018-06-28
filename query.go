@@ -58,19 +58,21 @@ func (q *Query) stringChan() <-chan string {
 		tokenChan <- strings.ToLower(string(q.Type))
 		// emit operation name
 		if q.Name != "" {
-			tokenChan <- " " // todo: make it a token const, not a raw string
+			tokenChan <- tokenSpace
 			tokenChan <- q.Name
 		}
 		// emit fields
-		tokenChan <- "{"
-		for _, field := range q.Fields {
+		tokenChan <- tokenLB
+		for i, field := range q.Fields {
+			if i != 0 {
+				tokenChan <- tokenComma
+			}
 			strs := field.stringChan()
 			for str := range strs {
 				tokenChan <- str
 			}
-			tokenChan <- ","
 		}
-		tokenChan <- "}"
+		tokenChan <- tokenRB
 		close(tokenChan)
 	}()
 	return tokenChan
