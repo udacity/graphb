@@ -60,6 +60,10 @@ func ArgumentString(name string, value string) Argument {
 	return Argument{name, argString(value)}
 }
 
+func ArgumentEnum(name string, value string) Argument {
+	return Argument{name, argEnum(value)}
+}
+
 func ArgumentBoolSlice(name string, values ...bool) Argument {
 	return Argument{name, argBoolSlice(values)}
 }
@@ -74,7 +78,12 @@ func ArgumentStringSlice(name string, values ...string) Argument {
 
 // ArgumentCustomType returns a custom GraphQL type's argument representation, which could be a recursive structure.
 func ArgumentCustomType(name string, values ...Argument) Argument {
-	return Argument{name, argumentSlice(values)}
+	return Argument{name, argumentCustom(values)}
+}
+
+// ArgumentSlice returns a slice of arguments
+func ArgumentSlice(name string, values ...[]Argument) Argument {
+	return Argument{name, argArgSlice(values)}
 }
 
 /////////////////////////////
@@ -112,6 +121,18 @@ func (v argString) stringChan() <-chan string {
 	tokenChan := make(chan string)
 	go func() {
 		tokenChan <- fmt.Sprintf(`"%s"`, v)
+		close(tokenChan)
+	}()
+	return tokenChan
+}
+
+// argEnum represents a enum value.
+type argEnum string
+
+func (v argEnum) stringChan() <-chan string {
+	tokenChan := make(chan string)
+	go func() {
+		tokenChan <- fmt.Sprintf("%s", v)
 		close(tokenChan)
 	}()
 	return tokenChan
@@ -178,9 +199,9 @@ func (s argStringSlice) stringChan() <-chan string {
 	return tokenChan
 }
 
-type argumentSlice []Argument
+type argumentCustom []Argument
 
-func (s argumentSlice) stringChan() <-chan string {
+func (s argumentCustom) stringChan() <-chan string {
 	tokenChan := make(chan string)
 	go func() {
 		tokenChan <- "{"
@@ -193,6 +214,26 @@ func (s argumentSlice) stringChan() <-chan string {
 			}
 		}
 		tokenChan <- "}"
+		close(tokenChan)
+	}()
+	return tokenChan
+}
+
+type argArgSlice [][]Argument
+
+func (s argArgSlice) stringChan() <-chan string {
+	tokenChan := make(chan string)
+	go func() {
+		tokenChan <- "["
+		for i, v := range s {
+			if i != 0 {
+				tokenChan <- ","
+			}
+			for str := range argumentCustom(v).stringChan() {
+				tokenChan <- str
+			}
+		}
+		tokenChan <- "]"
 		close(tokenChan)
 	}()
 	return tokenChan

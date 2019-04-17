@@ -1,6 +1,7 @@
 package graphb
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -76,6 +77,16 @@ func Test_argBool(t *testing.T) {
 	assert.Equal(t, 1, i)
 }
 
+func Test_argEnum(t *testing.T) {
+	b := argEnum("ENUM_VALUE")
+	i := 0
+	for str := range b.stringChan() {
+		assert.Equal(t, "ENUM_VALUE", str)
+		i++
+	}
+	assert.Equal(t, 1, i)
+}
+
 func Test_argBoolSlice(t *testing.T) {
 	bs := argBoolSlice([]bool{true, false})
 	c := bs.stringChan()
@@ -93,6 +104,27 @@ func Test_argIntSlice(t *testing.T) {
 	tokens := []string{"[", "1", ",", "-1", ",", "0", "]"}
 	i := 0
 	for str := range is.stringChan() {
+		assert.Equal(t, tokens[i], str)
+		i++
+	}
+	assert.Equal(t, len(tokens), i)
+}
+
+func Test_argMapSlice(t *testing.T) {
+	is := argArgSlice([][]Argument{
+		[]Argument{
+			ArgumentString("a", "b"),
+			ArgumentBool("b", true),
+		},
+		[]Argument{
+			ArgumentInt("a", 1),
+			ArgumentString("b", "true"),
+		},
+	})
+	tokens := []string{"[", "{", "a", ":", `"b"`, ",", "b", ":", "true", "}", ",", "{", "a", ":", "1", ",", "b", ":", `"true"`, "}", "]"}
+	i := 0
+	for str := range is.stringChan() {
+		fmt.Println(str)
 		assert.Equal(t, tokens[i], str)
 		i++
 	}
