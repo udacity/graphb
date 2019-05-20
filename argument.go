@@ -77,6 +77,14 @@ func ArgumentCustomType(name string, values ...Argument) Argument {
 	return Argument{name, argumentSlice(values)}
 }
 
+func ArgumentCustomTypeSlice(name string, values ...[]Argument) Argument {
+	return Argument{name, argCustomTypeSlice(values)}
+}
+
+func ArgumentCustomTypeSliceElem(values ...Argument) []Argument {
+	return values
+}
+
 /////////////////////////////
 // Primitive Wrapper Types //
 /////////////////////////////
@@ -193,6 +201,26 @@ func (s argumentSlice) stringChan() <-chan string {
 			}
 		}
 		tokenChan <- "}"
+		close(tokenChan)
+	}()
+	return tokenChan
+}
+
+type argCustomTypeSlice [][]Argument
+
+func (s argCustomTypeSlice) stringChan() <-chan string {
+	tokenChan := make(chan string)
+	go func() {
+		tokenChan <- "["
+		for i, v := range s {
+			if i != 0 {
+				tokenChan <- ","
+			}
+			for str := range argumentSlice(v).stringChan() {
+				tokenChan <- str
+			}
+		}
+		tokenChan <- "]"
 		close(tokenChan)
 	}()
 	return tokenChan
