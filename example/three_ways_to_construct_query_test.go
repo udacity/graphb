@@ -25,6 +25,17 @@ func TestMethodChaining(t *testing.T) {
 			graphb.MakeField("a").
 				SetArguments(
 					graphb.ArgumentString("string", "123"),
+					graphb.ArgumentCustomTypeSlice(
+						"mapArray",
+						graphb.ArgumentCustomTypeSliceElem(
+							graphb.ArgumentString("foo", "bar"),
+							graphb.ArgumentInt("fizzbuzz", 15),
+						),
+						graphb.ArgumentCustomTypeSliceElem(
+							graphb.ArgumentString("foo", "baz"),
+							graphb.ArgumentInt("fizzbuzz", 45),
+						),
+					),
 				).
 				SetFields(
 					graphb.MakeField("x").
@@ -39,7 +50,7 @@ func TestMethodChaining(t *testing.T) {
 		AddFields(graphb.MakeField("b"))
 	s, err := q.JSON()
 	assert.Nil(t, err)
-	assert.Equal(t, `{"query":"query{some_alias:a(string:\"123\"){x(string:\"123\",int_slice:[1,2,3]),y},b}"}`, s)
+	assert.Equal(t, `{"query":"query{some_alias:a(string:\"123\",mapArray:[{foo:\"bar\",fizzbuzz:15},{foo:\"baz\",fizzbuzz:45}]){x(string:\"123\",int_slice:[1,2,3]),y},b}"}`, s)
 }
 
 func TestFunctionalOptions(t *testing.T) {
