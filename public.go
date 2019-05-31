@@ -4,19 +4,8 @@
 package graphb
 
 import (
-	"strings"
-
 	"github.com/pkg/errors"
 )
-
-// StringFromChan builds a string from a channel, assuming the channel has been closed.
-func StringFromChan(c <-chan string) string {
-	var strs []string
-	for str := range c {
-		strs = append(strs, str)
-	}
-	return strings.Join(strs, "")
-}
 
 ///////////////////
 // Field Factory //
