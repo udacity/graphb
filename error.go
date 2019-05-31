@@ -13,7 +13,8 @@ const (
 	argumentName  nameType = "argument name"
 )
 
-// InvalidNameErr is returned when an invalid name is used. In GraphQL, operation, alias, field and argument all have names.
+// InvalidNameErr is returned when an invalid name is used.
+// In GraphQL, operation, alias, field and argument all have names.
 // A valid name matches ^[_A-Za-z][_0-9A-Za-z]*$ exactly.
 type InvalidNameErr struct {
 	Type nameType

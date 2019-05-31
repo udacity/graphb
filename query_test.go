@@ -1,7 +1,7 @@
 package graphb
 
 import (
-	"strings"
+	"bytes"
 	"testing"
 
 	"github.com/pkg/errors"
@@ -53,14 +53,10 @@ func TestQuery_JSON(t *testing.T) {
 					),
 			)
 
-		c := q.stringChan()
+		var buf bytes.Buffer
+		q.string(&buf)
 
-		var strs []string
-		for str := range c {
-			strs = append(strs, str)
-		}
-
-		assert.Equal(t, `mutation{createQuestion(input:{title:"what",content:"what",tagIds:[]}){question{id}}}`, strings.Join(strs, ""))
+		assert.Equal(t, `mutation{createQuestion(input:{title:"what",content:"what",tagIds:[]}){question{id}}}`, buf.String())
 	})
 
 }

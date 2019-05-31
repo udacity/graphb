@@ -1,11 +1,12 @@
 package graphb
 
 import (
+	"bytes"
 	"fmt"
 )
 
 type argumentValue interface {
-	stringChan() <-chan string
+	stringChan(buffer *bytes.Buffer)
 }
 
 type Argument struct {
@@ -13,17 +14,10 @@ type Argument struct {
 	Value argumentValue
 }
 
-func (a *Argument) stringChan() <-chan string {
-	tokenChan := make(chan string)
-	go func() {
-		tokenChan <- a.Name
-		tokenChan <- ":"
-		for str := range a.Value.stringChan() {
-			tokenChan <- str
-		}
-		close(tokenChan)
-	}()
-	return tokenChan
+func (a *Argument) stringChan(buffer *bytes.Buffer) {
+	buffer.WriteString(a.Name)
+	buffer.WriteString(":")
+	a.Value.stringChan(buffer)
 }
 
 func ArgumentAny(name string, value interface{}) (Argument, error) {
@@ -85,143 +79,99 @@ func ArgumentCustomTypeSliceElem(values ...Argument) []Argument {
 	return values
 }
 
-/////////////////////////////
+// ///////////////////////////
 // Primitive Wrapper Types //
-/////////////////////////////
+// ///////////////////////////
 
 // argBool represents a boolean value.
 type argBool bool
 
-func (v argBool) stringChan() <-chan string {
-	tokenChan := make(chan string)
-	go func() {
-		tokenChan <- fmt.Sprintf("%t", v)
-		close(tokenChan)
-	}()
-	return tokenChan
+func (v argBool) stringChan(buffer *bytes.Buffer) {
+	buffer.WriteString(fmt.Sprintf("%t", v))
 }
 
 // argInt represents an integer value.
 type argInt int
 
-func (v argInt) stringChan() <-chan string {
-	tokenChan := make(chan string)
-	go func() {
-		tokenChan <- fmt.Sprintf("%d", v)
-		close(tokenChan)
-	}()
-	return tokenChan
+func (v argInt) stringChan(buffer *bytes.Buffer) {
+	buffer.WriteString(fmt.Sprintf("%d", v))
 }
 
 // argString represents a string value.
 type argString string
 
-func (v argString) stringChan() <-chan string {
-	tokenChan := make(chan string)
-	go func() {
-		tokenChan <- fmt.Sprintf(`"%s"`, v)
-		close(tokenChan)
-	}()
-	return tokenChan
+func (v argString) stringChan(buffer *bytes.Buffer) {
+	buffer.WriteString(fmt.Sprintf(`"%s"`, v))
 }
 
-//////////////////////////////////
+// ////////////////////////////////
 // Primitive List Wrapper Types //
-//////////////////////////////////
+// ////////////////////////////////
 
 // argBoolSlice implements valueSlice
 type argBoolSlice []bool
 
-func (s argBoolSlice) stringChan() <-chan string {
-	tokenChan := make(chan string)
-	go func() {
-		tokenChan <- "["
-		for i, v := range s {
-			if i != 0 {
-				tokenChan <- ","
-			}
-			tokenChan <- fmt.Sprintf("%t", v)
+func (s argBoolSlice) stringChan(buffer *bytes.Buffer) {
+	buffer.WriteString("[")
+	for i, v := range s {
+		if i != 0 {
+			buffer.WriteString(",")
 		}
-		tokenChan <- "]"
-		close(tokenChan)
-	}()
-	return tokenChan
+		buffer.WriteString(fmt.Sprintf("%t", v))
+	}
+	buffer.WriteString("]")
 }
 
 // argIntSlice implements valueSlice
 type argIntSlice []int
 
-func (s argIntSlice) stringChan() <-chan string {
-	tokenChan := make(chan string)
-	go func() {
-		tokenChan <- "["
-		for i, v := range s {
-			if i != 0 {
-				tokenChan <- ","
-			}
-			tokenChan <- fmt.Sprintf("%d", v)
+func (s argIntSlice) stringChan(buffer *bytes.Buffer) {
+	buffer.WriteString("[")
+	for i, v := range s {
+		if i != 0 {
+			buffer.WriteString(",")
 		}
-		tokenChan <- "]"
-		close(tokenChan)
-	}()
-	return tokenChan
+		buffer.WriteString(fmt.Sprintf("%d", v))
+	}
+	buffer.WriteString("]")
 }
 
 // argStringSlice implements valueSlice
 type argStringSlice []string
 
-func (s argStringSlice) stringChan() <-chan string {
-	tokenChan := make(chan string)
-	go func() {
-		tokenChan <- "["
-		for i, v := range s {
-			if i != 0 {
-				tokenChan <- ","
-			}
-			tokenChan <- fmt.Sprintf(`"%s"`, v)
+func (s argStringSlice) stringChan(buffer *bytes.Buffer) {
+	buffer.WriteString("[")
+	for i, v := range s {
+		if i != 0 {
+			buffer.WriteString(",")
 		}
-		tokenChan <- "]"
-		close(tokenChan)
-	}()
-	return tokenChan
+		buffer.WriteString(fmt.Sprintf(`"%s"`, v))
+	}
+	buffer.WriteString("]")
 }
 
 type argumentSlice []Argument
 
-func (s argumentSlice) stringChan() <-chan string {
-	tokenChan := make(chan string)
-	go func() {
-		tokenChan <- "{"
-		for i, v := range s {
-			if i != 0 {
-				tokenChan <- ","
-			}
-			for str := range v.stringChan() {
-				tokenChan <- str
-			}
+func (s argumentSlice) stringChan(buffer *bytes.Buffer) {
+	buffer.WriteString("{")
+	for i, v := range s {
+		if i != 0 {
+			buffer.WriteString(",")
 		}
-		tokenChan <- "}"
-		close(tokenChan)
-	}()
-	return tokenChan
+		v.stringChan(buffer)
+	}
+	buffer.WriteString("}")
 }
 
 type argCustomTypeSlice [][]Argument
 
-func (s argCustomTypeSlice) stringChan() <-chan string {
-	tokenChan := make(chan string)
-	go func() {
-		tokenChan <- "["
-		for i, v := range s {
-			if i != 0 {
-				tokenChan <- ","
-			}
-			for str := range argumentSlice(v).stringChan() {
-				tokenChan <- str
-			}
+func (s argCustomTypeSlice) stringChan(buffer *bytes.Buffer) {
+	buffer.WriteString("[")
+	for i, v := range s {
+		if i != 0 {
+			buffer.WriteString(",")
 		}
-		tokenChan <- "]"
-		close(tokenChan)
-	}()
-	return tokenChan
+		argumentSlice(v).stringChan(buffer)
+	}
+	buffer.WriteString("]")
 }

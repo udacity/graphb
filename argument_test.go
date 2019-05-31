@@ -1,6 +1,7 @@
 package graphb
 
 import (
+	"bytes"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -69,32 +70,25 @@ func TestArgumentStringSlice(t *testing.T) {
 func Test_argBool(t *testing.T) {
 	b := argBool(true)
 	i := 0
-	for str := range b.stringChan() {
-		assert.Equal(t, "true", str)
-		i++
-	}
+	var buf bytes.Buffer
+	b.stringChan(&buf)
+	assert.Equal(t, "true", buf.String())
+	i++
 	assert.Equal(t, 1, i)
 }
 
 func Test_argBoolSlice(t *testing.T) {
 	bs := argBoolSlice([]bool{true, false})
-	c := bs.stringChan()
-	i := 0
-	tokens := []string{"[", "true", ",", "false", "]"}
-	for str, ok := <-c; ok; str, ok = <-c {
-		assert.Equal(t, tokens[i], str)
-		i++
-	}
-	assert.Equal(t, len(tokens), i)
+	var buf bytes.Buffer
+	bs.stringChan(&buf)
+	tokens := "[true,false]"
+	assert.Equal(t, tokens, buf.String())
 }
 
 func Test_argIntSlice(t *testing.T) {
 	is := argIntSlice([]int{1, -1, 0})
-	tokens := []string{"[", "1", ",", "-1", ",", "0", "]"}
-	i := 0
-	for str := range is.stringChan() {
-		assert.Equal(t, tokens[i], str)
-		i++
-	}
-	assert.Equal(t, len(tokens), i)
+	tokens := "[1,-1,0]"
+	var buf bytes.Buffer
+	is.stringChan(&buf)
+	assert.Equal(t, tokens, buf.String())
 }

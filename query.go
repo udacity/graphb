@@ -1,6 +1,7 @@
 package graphb
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 
@@ -26,56 +27,45 @@ func (q *Query) setFields(fs []*Field) {
 	q.Fields = fs
 }
 
-// StringChan returns a string channel and an error.
+// String returns a string channel and an error.
 // When error is not nil, the channel is nil.
 // When error is nil, the channel is guaranteed to be closed.
 // Warning: One should never receive from a nil channel for eternity awaits by a nil channel.
-func (q *Query) StringChan() (<-chan string, error) {
-	ch := make(chan string)
-
+func (q *Query) String() (string, error) {
+	var buffer bytes.Buffer
 	if err := q.check(); err != nil {
-		close(ch)
-		return ch, errors.WithStack(err)
+		return "", errors.WithStack(err)
 	}
 
 	for _, f := range q.Fields {
 		if f == nil {
-			close(ch)
-			return ch, errors.WithStack(NilFieldErr{})
+			return "", errors.WithStack(NilFieldErr{})
 		}
 		if err := f.check(); err != nil {
-			close(ch)
-			return ch, errors.WithStack(err)
+			return "", errors.WithStack(err)
 		}
 	}
-	return q.stringChan(), nil
+	q.string(&buffer)
+	return buffer.String(), nil
 }
 
-// StringChan returns a read only channel which is guaranteed to be closed in the future.
-func (q *Query) stringChan() <-chan string {
-	tokenChan := make(chan string)
-	go func() {
-		tokenChan <- strings.ToLower(string(q.Type))
-		// emit operation name
-		if q.Name != "" {
-			tokenChan <- tokenSpace
-			tokenChan <- q.Name
+// String returns a read only channel which is guaranteed to be closed in the future.
+func (q *Query) string(buffer *bytes.Buffer) {
+	buffer.WriteString(strings.ToLower(string(q.Type)))
+	// emit operation name
+	if q.Name != "" {
+		buffer.WriteString(tokenSpace)
+		buffer.WriteString(q.Name)
+	}
+	// emit fields
+	buffer.WriteString(tokenLB)
+	for i, field := range q.Fields {
+		if i != 0 {
+			buffer.WriteString(tokenComma)
 		}
-		// emit fields
-		tokenChan <- tokenLB
-		for i, field := range q.Fields {
-			if i != 0 {
-				tokenChan <- tokenComma
-			}
-			strs := field.stringChan()
-			for str := range strs {
-				tokenChan <- str
-			}
-		}
-		tokenChan <- tokenRB
-		close(tokenChan)
-	}()
-	return tokenChan
+		field.stringChan(buffer)
+	}
+	buffer.WriteString(tokenRB)
 }
 
 func (q *Query) check() error {
@@ -96,9 +86,9 @@ func (q *Query) checkName() error {
 	return nil
 }
 
-////////////////
+// //////////////
 // Public API //
-////////////////
+// //////////////
 
 // MakeQuery constructs a Query of the given type and returns a pointer of it.
 func MakeQuery(Type operationType) *Query {
@@ -107,12 +97,11 @@ func MakeQuery(Type operationType) *Query {
 
 // JSON returns a json string with "query" field.
 func (q *Query) JSON() (string, error) {
-	strCh, err := q.StringChan()
+	strCh, err := q.String()
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
-	s := StringFromChan(strCh)
-	return fmt.Sprintf(`{"query":"%s"}`, strings.Replace(s, `"`, `\"`, -1)), nil
+	return fmt.Sprintf(`{"query":"%s"}`, strings.Replace(strCh, `"`, `\"`, -1)), nil
 }
 
 // SetName sets the Name field of this Query.
