@@ -87,6 +87,19 @@ func Test_argEnum(t *testing.T) {
 	assert.Equal(t, 1, i)
 }
 
+func Test_argEnumSlice(t *testing.T) {
+	es := argEnumSlice([]string{"ENUM_VALUE", "ENUM_SLICE"})
+	c := es.stringChan()
+	i := 0
+	tokens := []string{"[", "ENUM_VALUE", ",", "ENUM_SLICE", "]"}
+
+	for str, ok := <-c; ok; str, ok = <-c {
+		assert.Equal(t, tokens[i], str)
+		i++
+	}
+	assert.Equal(t, len(tokens), i)
+}
+
 func Test_argBoolSlice(t *testing.T) {
 	bs := argBoolSlice([]bool{true, false})
 	c := bs.stringChan()
