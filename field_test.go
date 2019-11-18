@@ -13,3 +13,8 @@ func TestField_AddArguments(t *testing.T) {
 	f.AddArguments(ArgumentBool("b", true))
 	assert.Equal(t, Argument{"b", argBool(true)}, f.Arguments[0])
 }
+
+func TestField_CheckInlineFragment(t *testing.T) {
+	f := MakeField("... on f")
+	assert.NoError(t, f.checkOther())
+}

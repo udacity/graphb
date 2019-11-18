@@ -97,7 +97,7 @@ func (f *Field) check() error {
 // checkOther checks the validity of this Field and returns nil on valid Field.
 func (f *Field) checkOther() error {
 	// Check validity of names
-	if !validName.MatchString(f.Name) {
+	if !validName.MatchString(f.Name) && !validInlineFragment.MatchString(f.Name){
 		return errors.WithStack(InvalidNameErr{fieldName, f.Name})
 	}
 	if err := f.checkAlias(); err != nil {
