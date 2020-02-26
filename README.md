@@ -42,13 +42,13 @@ The lib provides 3 ways of constructing a query.
 3. Struct Literal
 
 #### 1. Method Chaining
-See [example/three_ways_to_construct_query_test.go#L10-L43](example/three_ways_to_construct_query_test.go#L10-L43)
+See [example/three_ways_to_construct_query_test.go#L10-L54](example/three_ways_to_construct_query_test.go#L10-L43)
 
 #### 2. Functional Options
-See [example/three_ways_to_construct_query_test.go#L45-L74](example/three_ways_to_construct_query_test.go#L45-L74)
+See [example/three_ways_to_construct_query_test.go#L56-L85](example/three_ways_to_construct_query_test.go#L45-L74)
 
 #### 3. Struct Literal
-See [example/three_ways_to_construct_query_test.go#L76-L100](example/three_ways_to_construct_query_test.go#L76-L100)
+See [example/three_ways_to_construct_query_test.go#L87-L111](example/three_ways_to_construct_query_test.go#L76-L100)
 
 ### Words from the author
 __The library catches cycles.__ That is, if you have a `Field` whose sub Fields can reach the `Field` itself, the library reports an error.
