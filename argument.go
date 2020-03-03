@@ -60,6 +60,10 @@ func ArgumentString(name string, value string) Argument {
 	return Argument{name, argString(value)}
 }
 
+func ArgumentBlockString(name string, value string) Argument {
+	return Argument{name, argBlockString(value)}
+}
+
 func ArgumentEnum(name string, value string) Argument {
 	return Argument{name, argEnum(value)}
 }
@@ -129,6 +133,20 @@ func (v argString) stringChan() <-chan string {
 	}()
 	return tokenChan
 }
+
+
+// argBlockString represents a block string value.
+type argBlockString string
+
+func (v argBlockString) stringChan() <- chan string {
+	tokenChan := make(chan string)
+	go func() {
+		tokenChan <- fmt.Sprintf(`"""%s"""`, v)
+		close(tokenChan)
+	}()
+	return tokenChan
+}
+
 
 // argEnum represents a enum value.
 type argEnum string
