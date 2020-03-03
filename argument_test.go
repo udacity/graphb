@@ -59,6 +59,13 @@ func TestArgumentString(t *testing.T) {
 	assert.Equal(t, Argument{"blocked", argString("")}, a)
 }
 
+func TestArgumentBlockString(t *testing.T) {
+	a := ArgumentBlockString("blocked", `a`)
+	assert.Equal(t, Argument{"blocked", argBlockString("a")}, a)
+	a = ArgumentBlockString("blocked", ``)
+	assert.Equal(t, Argument{"blocked", argBlockString("")}, a)
+}
+
 func TestArgumentStringSlice(t *testing.T) {
 	a := ArgumentStringSlice("blocked", "a", "b", "", " ", "d")
 	assert.Equal(t, Argument{"blocked", argStringSlice([]string{"a", "b", "", " ", "d"})}, a)
@@ -82,6 +89,16 @@ func Test_argEnum(t *testing.T) {
 	i := 0
 	for str := range b.stringChan() {
 		assert.Equal(t, "ENUM_VALUE", str)
+		i++
+	}
+	assert.Equal(t, 1, i)
+}
+
+func Test_argBlockString(t *testing.T) {
+	b := argBlockString(`blockstring`)
+	i := 0
+	for str := range b.stringChan() {
+		assert.Equal(t, "\"\"\"blockstring\"\"\"", str)
 		i++
 	}
 	assert.Equal(t, 1, i)
