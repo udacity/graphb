@@ -66,6 +66,21 @@ func TestArgumentStringSlice(t *testing.T) {
 	assert.Equal(t, Argument{"blocked", argStringSlice(nil)}, a)
 }
 
+func TestArgumentField(t *testing.T) {
+	a := ArgumentField("blocked", "a")
+	assert.Equal(t, Argument{"blocked", argField("a")}, a)
+	a = ArgumentField("blocked", "")
+	assert.Equal(t, Argument{"blocked", argField("")}, a)
+}
+
+func TestArgumentFieldSlice(t *testing.T) {
+	a := ArgumentFieldSlice("blocked", "a", "b", "", " ", "d")
+	assert.Equal(t, Argument{"blocked", argFieldSlice([]string{"a", "b", "", " ", "d"})}, a)
+
+	a = ArgumentFieldSlice("blocked")
+	assert.Equal(t, Argument{"blocked", argFieldSlice(nil)}, a)
+}
+
 func Test_argBool(t *testing.T) {
 	b := argBool(true)
 	i := 0
