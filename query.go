@@ -156,3 +156,8 @@ func (q *Query) DeleteHeader(key string) *Query {
 	delete(q.Headers, key)
 	return q
 }
+
+// GetHeaders gets all the query headers
+func (q *Query) GetHeaders() map[string]string{
+	return q.Headers
+}
