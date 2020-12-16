@@ -15,6 +15,7 @@ type Query struct {
 	Name   string        // The operation name is a meaningful and explicit name for your operation.
 	Fields []*Field
 	E      error
+	Headers map[string]string
 }
 
 // implements fieldContainer
@@ -142,4 +143,21 @@ func (q *Query) SetFields(fields ...*Field) *Query {
 func (q *Query) AddFields(fields ...*Field) *Query {
 	q.Fields = append(q.Fields, fields...)
 	return q
+}
+
+// AddHeader adds a header key-value to this Query
+func (q *Query) AddHeader(key, value string) *Query {
+	q.Headers[key] = value
+	return q
+}
+
+// DeleteHeader deletes a header key-value from this Query
+func (q *Query) DeleteHeader(key string) *Query {
+	delete(q.Headers, key)
+	return q
+}
+
+// GetHeaders gets all the query headers
+func (q *Query) GetHeaders() map[string]string{
+	return q.Headers
 }
