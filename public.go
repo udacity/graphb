@@ -82,7 +82,7 @@ func OfArguments(arguments ...Argument) FieldOption {
 // Other options such as operation name and alias are optional.
 func NewQuery(Type operationType, options ...QueryOptionInterface) *Query {
 	// todo: change to new style error handling
-	q := &Query{Type: Type}
+	q := &Query{Type: Type, Headers: make(map[string]string)}
 
 	for _, op := range options {
 		if err := op.runQueryOption(q); err != nil {

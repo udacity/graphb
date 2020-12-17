@@ -103,7 +103,7 @@ func (q *Query) checkName() error {
 
 // MakeQuery constructs a Query of the given type and returns a pointer of it.
 func MakeQuery(Type operationType) *Query {
-	return &Query{Type: Type}
+	return &Query{Type: Type, Headers: make(map[string]string)}
 }
 
 // JSON returns a json string with "query" field.
