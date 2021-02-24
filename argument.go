@@ -129,7 +129,7 @@ func (v argString) stringChan() <-chan string {
 	return tokenChan
 }
 
-// argString represents a enum value.
+// argEnum represents a enum value.
 type argEnum string
 
 func (v argEnum) stringChan() <-chan string {
