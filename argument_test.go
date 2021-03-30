@@ -3,6 +3,7 @@ package graphb
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -64,6 +65,12 @@ func TestArgumentBlockString(t *testing.T) {
 	assert.Equal(t, Argument{"blocked", argBlockString("a")}, a)
 	a = ArgumentBlockString("blocked", ``)
 	assert.Equal(t, Argument{"blocked", argBlockString("")}, a)
+}
+
+func TestArgumentTime(t *testing.T) {
+	newTime := time.Now()
+	a := ArgumentTime("blocked", newTime)
+	assert.Equal(t, Argument{"blocked", argTime(newTime)}, a)
 }
 
 func TestArgumentStringSlice(t *testing.T) {

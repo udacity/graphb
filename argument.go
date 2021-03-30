@@ -2,6 +2,7 @@ package graphb
 
 import (
 	"fmt"
+	"time"
 )
 
 type argumentValue interface {
@@ -43,6 +44,9 @@ func ArgumentAny(name string, value interface{}) (Argument, error) {
 	case []string:
 		return ArgumentStringSlice(name, v...), nil
 
+	case time.Time:
+		return ArgumentTime(name, v), nil
+
 	default:
 		return Argument{}, ArgumentTypeNotSupportedErr{Value: value}
 	}
@@ -66,6 +70,10 @@ func ArgumentBlockString(name string, value string) Argument {
 
 func ArgumentEnum(name string, value string) Argument {
 	return Argument{name, argEnum(value)}
+}
+
+func ArgumentTime(name string, value time.Time) Argument {
+	return Argument{name, argTime(value)}
 }
 
 func ArgumentBoolSlice(name string, values ...bool) Argument {
@@ -93,6 +101,7 @@ func ArgumentCustomType(name string, values ...Argument) Argument {
 func ArgumentSlice(name string, values ...[]Argument) Argument {
 	return Argument{name, argArgSlice(values)}
 }
+
 
 /////////////////////////////
 // Primitive Wrapper Types //
@@ -155,6 +164,18 @@ func (v argEnum) stringChan() <-chan string {
 	tokenChan := make(chan string)
 	go func() {
 		tokenChan <- fmt.Sprintf("%s", v)
+		close(tokenChan)
+	}()
+	return tokenChan
+}
+
+// argTime represents a time value
+type argTime time.Time
+
+func (v argTime) stringChan() <-chan string {
+	tokenChan := make(chan string)
+	go func() {
+		tokenChan <- fmt.Sprintf("%s", time.Time(v).Format(time.RFC3339))
 		close(tokenChan)
 	}()
 	return tokenChan
