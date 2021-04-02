@@ -175,7 +175,7 @@ type argTime time.Time
 func (v argTime) stringChan() <-chan string {
 	tokenChan := make(chan string)
 	go func() {
-		tokenChan <- fmt.Sprintf("%s", time.Time(v).Format(time.RFC3339))
+		tokenChan <- fmt.Sprintf(`"%s"`, time.Time(v).Format(time.RFC3339))
 		close(tokenChan)
 	}()
 	return tokenChan
