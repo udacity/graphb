@@ -66,6 +66,13 @@ func TestArgumentStringSlice(t *testing.T) {
 	assert.Equal(t, Argument{"blocked", argStringSlice(nil)}, a)
 }
 
+func TestArgumentEnum(t *testing.T) {
+	a := ArgumentEnum("blocked", "a")
+	assert.Equal(t, Argument{"blocked", argEnum("a")}, a)
+	a = ArgumentEnum("blocked", "")
+	assert.Equal(t, Argument{"blocked", argEnum("")}, a)
+}
+
 func Test_argBool(t *testing.T) {
 	b := argBool(true)
 	i := 0

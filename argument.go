@@ -60,6 +60,10 @@ func ArgumentString(name string, value string) Argument {
 	return Argument{name, argString(value)}
 }
 
+func ArgumentEnum(name string, value string) Argument {
+	return Argument{name, argEnum(value)}
+}
+
 func ArgumentBoolSlice(name string, values ...bool) Argument {
 	return Argument{name, argBoolSlice(values)}
 }
@@ -120,6 +124,18 @@ func (v argString) stringChan() <-chan string {
 	tokenChan := make(chan string)
 	go func() {
 		tokenChan <- fmt.Sprintf(`"%s"`, v)
+		close(tokenChan)
+	}()
+	return tokenChan
+}
+
+// argEnum represents a enum value.
+type argEnum string
+
+func (v argEnum) stringChan() <-chan string {
+	tokenChan := make(chan string)
+	go func() {
+		tokenChan <- fmt.Sprintf(`%s`, v)
 		close(tokenChan)
 	}()
 	return tokenChan
